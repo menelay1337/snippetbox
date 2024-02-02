@@ -7,6 +7,12 @@ import (
 	"os"
 )
 
+// application structure for dependency injection
+type application struct {
+	logger *slog.Logger
+}
+
+// config structure
 type config struct {
 	port	  string
 	staticDir string
@@ -22,7 +28,7 @@ func main() {
 	flag.StringVar(&cfg.logFormat, "format", "text", "format of logs(json or plain text)")
 	// obtaining cmd flags and assigns them to variables'
 	flag.Parse()
-	// logger initialize
+	// application initialize
 	var logger *slog.Logger
 	var loggerOptions = &slog.HandlerOptions{
 		Level: slog.LevelDebug,
@@ -34,6 +40,10 @@ func main() {
 	} else if cfg.logFormat == "text" {
 		logger = slog.New(slog.NewTextHandler(os.Stdout, loggerOptions))
 	}
+	// application initialize 
+	app := &application{
+		logger: logger,
+	}
 	// mux router
 	mux := http.NewServeMux()
 	// file server handler
@@ -42,9 +52,9 @@ func main() {
 	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 
 	// serving URLs
-	mux.HandleFunc("/", home)
-	mux.HandleFunc("/snippet/view", snippetView)
-	mux.HandleFunc("/snippet/create", snippetCreate)
+	mux.HandleFunc("/", app.home)
+	mux.HandleFunc("/snippet/view", app.snippetView)
+	mux.HandleFunc("/snippet/create", app.snippetCreate)
 
 	// log Start of the server
 	logger.Info("Starting server", slog.Any("port", cfg.port))
