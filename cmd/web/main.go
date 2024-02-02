@@ -10,6 +10,7 @@ import (
 type config struct {
 	port	  string
 	staticDir string
+	logFormat string
 }
 
 var cfg config
@@ -18,10 +19,21 @@ func main() {
 	// assigning flags
 	flag.StringVar(&cfg.port,"port", ":3000", "Port of http server.")
 	flag.StringVar(&cfg.staticDir, "static-dir", "./ui/static", "Path to static assets")
+	flag.StringVar(&cfg.logFormat, "format", "text", "format of logs(json or plain text)")
 	// obtaining cmd flags and assigns them to variables'
 	flag.Parse()
-	// logger insatnce
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	// logger initialize
+	var logger *slog.Logger
+	var loggerOptions = &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+		AddSource: true,
+	}
+
+	if cfg.logFormat == "json" {
+		logger = slog.New(slog.NewJSONHandler(os.Stdout, loggerOptions))
+	} else if cfg.logFormat == "text" {
+		logger = slog.New(slog.NewTextHandler(os.Stdout, loggerOptions))
+	}
 	// mux router
 	mux := http.NewServeMux()
 	// file server handler
@@ -34,10 +46,12 @@ func main() {
 	mux.HandleFunc("/snippet/view", snippetView)
 	mux.HandleFunc("/snippet/create", snippetCreate)
 
-	// flag.Parse() returns pointers, we must derefernce them to obtain their values
-	log.Printf("Starting server on port %s.\nPress Ctrl+C to stop the server.", *cfg.port)
+	// log Start of the server
+	logger.Info("Starting server", slog.Any("port", cfg.port))
 
-	err := http.ListenAndServe(*PORT, mux)
-	log.Fatal(err)
+	err := http.ListenAndServe(cfg.port, mux)
+
+	logger.Error(err.Error())
+	os.Exit(1)
 
 }
