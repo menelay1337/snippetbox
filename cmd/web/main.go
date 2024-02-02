@@ -44,22 +44,11 @@ func main() {
 	app := &application{
 		logger: logger,
 	}
-	// mux router
-	mux := http.NewServeMux()
-	// file server handler
-	fileServer := http.FileServer(http.Dir("./ui/static/"))
-	// handling static stuff
-	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
-
-	// serving URLs
-	mux.HandleFunc("/", app.home)
-	mux.HandleFunc("/snippet/view", app.snippetView)
-	mux.HandleFunc("/snippet/create", app.snippetCreate)
 
 	// log Start of the server
 	logger.Info("Starting server", slog.Any("port", cfg.port))
 
-	err := http.ListenAndServe(cfg.port, mux)
+	err := http.ListenAndServe(cfg.port, app.routes())
 
 	logger.Error(err.Error())
 	os.Exit(1)

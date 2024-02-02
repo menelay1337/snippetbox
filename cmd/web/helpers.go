@@ -3,7 +3,7 @@ package main
 import (
 	"net/http"
 	"log/slog"
-	"runtime/debug"
+	//"runtime/debug"
 )
 
 func (app *application) serverError(w http.ResponseWriter, r *http.Request, err error) {
