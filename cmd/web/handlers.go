@@ -7,13 +7,11 @@ import (
 	"html/template"
 )
 
-// root dir handler
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		page, err := template.ParseFiles("./ui/html/pages/404.tmpl.html")
 		if err != nil {
-			app.logger.Error(err.Error())
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			app.serverError(w, r, err)
 			return
 		}
 		page.Execute(w, nil)
@@ -27,18 +25,14 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ts, err := template.ParseFiles(files...)
-	
-
 	if err != nil {
-		app.logger.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		app.serverError(w, r, err)
 		return
 	}
 	err = ts.ExecuteTemplate(w, "base", nil)
 
 	if err != nil {
-		app.logger.Error(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		app.serverError(w, r, err)
 		return
 	}
 
@@ -47,7 +41,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil || id < 1 {
-		http.NotFound(w, r)
+		app.notFound(w)
 		return
 	}
 
@@ -56,9 +50,10 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		w.Header().Set("Allow", "POST")
-		http.Error(w, "Method Not Allowed!", http.StatusMethodNotAllowed)
+		w.Header().Set("Allow", http.MethodPost)
+		app.clientError(w, http.StatusMethodNotAllowed)
 		return
 	}
+	
 	w.Write([]byte("Create a new snippet..."))
 }
