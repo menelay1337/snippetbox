@@ -8,7 +8,7 @@ import (
 	"log"
 )
 
-// request handlers
+// root dir handler
 func home(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		page, err := template.ParseFiles("./ui/html/pages/404.tmpl.html")
@@ -22,7 +22,7 @@ func home(w http.ResponseWriter, r *http.Request) {
 	}
 
 	files := []string{
-		"./ui/html/base.tmpl.html",
+		"./ui/html/base.html",
 		"./ui/html/partials/nav.tmpl.html",
 		"./ui/html/pages/home.tmpl.html",
 	}
@@ -58,7 +58,7 @@ func snippetView(w http.ResponseWriter, r *http.Request) {
 func snippetCreate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		w.Header().Set("Allow", "POST")
-		http.Error(w, "Method Not Allowed!", 405)
+		http.Error(w, "Method Not Allowed!", http.StatusMethodNotAllowed)
 		return
 	}
 	w.Write([]byte("Create a new snippet..."))
