@@ -9,11 +9,13 @@ import (
 	"os"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/menelay1337/snippetbox/internal/models"
 )
 
 // application structure for dependency injection
 type application struct {
 	logger *slog.Logger
+	snippets *models.SnippetModel
 }
 
 // config structure
@@ -45,7 +47,7 @@ func openDB(dsn string) (*sql.DB, error) {
 
 func main() {
 	var dsn string;
-	fmt.Print("Enter DSN: ")
+	fmt.Print("DSN format: user:pass@options/dbname?var_pairs\nEnter DSN: ")
 	fmt.Scan(&dsn)
 
 	// assigning flags
@@ -74,9 +76,6 @@ func main() {
 		logger = slog.New(slog.NewTextHandler(os.Stdout, loggerOptions))
 	}
 
-	app := &application{
-		logger: logger,
-	}
 
 	// open db connection pool
 
@@ -87,6 +86,11 @@ func main() {
 	}
 
 	defer db.Close()
+	
+	app := &application{
+		logger: logger,
+		snippets: &models.SnippetModel{ DB : db },
+	}
 
 	// start of the server
 	logger.Info("Starting server", slog.Any("port", cfg.port))
