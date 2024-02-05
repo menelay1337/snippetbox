@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	//"html/template"
 	"errors"
 
 	"github.com/menelay1337/snippetbox/internal/models"
@@ -14,46 +13,20 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		app.notFound(w)
 		return
-	//	page, err := template.ParseFiles("./ui/html/pages/404.tmpl.html")
-	//	if err != nil {
-	//		app.serverError(w, r, err)
-	//		return
-	//	}
-	//	page.Execute(w, nil)
-	//	return
 	}
 
 	snippets, err := app.snippets.Latest()
-
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
 
-	for _, snippet :=  range snippets {
-		fmt.Fprintf(w, "%+v\n", snippet)
-	}
+	data := app.newTemplateData(r)
+	data.Snippets = snippets
 
-
-//	files := []string{
-//		"./ui/html/base.html",
-//		"./ui/html/partials/nav.tmpl.html",
-//		"./ui/html/pages/home.tmpl.html",
-//	}
-//
-//	ts, err := template.ParseFiles(files...)
-//	if err != nil {
-//		app.serverError(w, r, err)
-//		return
-//	}
-//	err = ts.ExecuteTemplate(w, "base", nil)
-//
-//	if err != nil {
-//		app.serverError(w, r, err)
-//		return
-//	}
-
+	app.render(w, r, http.StatusOK, "home.tmpl", data)
 }
+
 
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
@@ -71,8 +44,11 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+	
+	data := app.newTemplateData(r)
+	data.Snippet = snippet
 
-	fmt.Fprintf(w, "%+v", snippet)
+	app.render(w, r, http.StatusOK, "view.tmpl", data)
 }
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {

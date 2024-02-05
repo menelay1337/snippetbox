@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"database/sql"
 	"log/slog"
+	"html/template"
 	"fmt"
 	"flag"
 	"os"
@@ -14,8 +15,9 @@ import (
 
 // application structure for dependency injection
 type application struct {
-	logger *slog.Logger
-	snippets *models.SnippetModel
+	logger		  *slog.Logger
+	snippets	  *models.SnippetModel
+	templateCache map[string]*template.Template
 }
 
 // config structure
@@ -86,10 +88,17 @@ func main() {
 	}
 
 	defer db.Close()
+
+	templateCache, err := newTemplateCache()
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
 	
 	app := &application{
 		logger: logger,
 		snippets: &models.SnippetModel{ DB : db },
+		templateCache: templateCache,
 	}
 
 	// start of the server
