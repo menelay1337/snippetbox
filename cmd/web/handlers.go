@@ -9,6 +9,7 @@ import (
 	"github.com/menelay1337/snippetbox/internal/models"
 )
 
+
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		app.notFound(w)
