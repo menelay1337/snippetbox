@@ -1,0 +1,3 @@
+1) Refactor session management from SCS to gorilla/session package
+2) Fix the ux problem with #7 th snippet view.
+

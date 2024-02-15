@@ -1,6 +1,7 @@
 package main
 
 import (
+	// standard library package
 	"net/http"
 	"database/sql"
 	"log/slog"
@@ -8,16 +9,21 @@ import (
 	"fmt"
 	"flag"
 	"os"
+	"time"
 
+	// third party packages
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/menelay1337/snippetbox/internal/models"
+	"github.com/alexedwards/scs/mysqlstore"
+	"github.com/alexedwards/scs/v2"
 )
 
 // application structure for dependency injection
 type application struct {
-	logger		  *slog.Logger
-	snippets	  *models.SnippetModel
-	templateCache map[string]*template.Template
+	logger		   *slog.Logger
+	snippets	   *models.SnippetModel
+	templateCache  map[string]*template.Template
+	sessionManager *scs.SessionManager
 }
 
 // config structure
@@ -78,7 +84,7 @@ func main() {
 		logger = slog.New(slog.NewTextHandler(os.Stdout, loggerOptions))
 	}
 
-
+	
 	// open db connection pool
 
 	db, err := openDB(cfg.dsn)
@@ -95,12 +101,18 @@ func main() {
 		os.Exit(1)
 	}
 	
+
+	// Session store initialization
+	sessionManager := scs.New()
+	sessionManager.Store = mysqlstore.New(db)
+	sessionManager.Lifetime = 12 * time.Hour
+
 	app := &application{
 		logger: logger,
 		snippets: &models.SnippetModel{ DB : db },
 		templateCache: templateCache,
+		sessionManager: sessionManager,
 	}
-
 	// start of the server
 	logger.Info("Starting server", slog.Any("port", cfg.port))
 
