@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"time"
 	//"runtime/debug"
+
+	"github.com/justinas/nosurf"
 )
 
 func (app *application) render(w http.ResponseWriter, r *http.Request, status int, page string, data templateData) {
@@ -32,8 +34,10 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, status in
 
 func (app *application) newTemplateData(r *http.Request) templateData {
 	return templateData {
-		CurrentYear: time.Now().Year(),
-		Flash:		 app.sessionManager.PopString(r.Context(), "flash"),
+		CurrentYear:	 time.Now().Year(),
+		Flash:			 app.sessionManager.PopString(r.Context(), "flash"),
+		IsAuthenticated: app.isAuthenticated(r),
+		CSRFToken:		 nosurf.Token(r),
 	}
 }
 
@@ -59,3 +63,10 @@ func (app *application) clientError(w http.ResponseWriter, statusCode int) {
 func (app *application) notFound(w http.ResponseWriter) {
 	app.clientError(w, http.StatusNotFound)
 }
+
+// Authentication
+
+func (app *application) isAuthenticated(r *http.Request) bool {
+	return app.sessionManager.Exists(r.Context(), "authenticatedUserID")
+}
+
